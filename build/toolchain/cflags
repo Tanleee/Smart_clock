@@ -1,3 +1,0 @@
--march=rv32imc_zicsr_zifencei
--mtune=esp-base
-"-specs=D:/Espressif/Workspace/Smart_clock/build/specs/picolibc.specs"
