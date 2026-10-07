@@ -1,0 +1,17 @@
+#pragma once
+
+/* ====== WiFi ====== */
+#define WIFI_SSID          "ASUS_VIVOBOOK"
+#define WIFI_PASS          "leduytan123"
+#define WIFI_MAX_RETRY     10
+
+/* ====== Time ====== */
+#define TIME_ZONE          "ICT-7"        /* Việt Nam: UTC+7 */
+#define PRINT_PERIOD_MS    1000
+
+/* ====== Task / Queue ====== */
+#define TIME_TASK_STACK     4096
+#define TIME_TASK_PRIO      5
+#define DISPLAY_TASK_STACK  3072
+#define DISPLAY_TASK_PRIO   4
+#define DISPLAY_QUEUE_LEN   10

@@ -1,0 +1,2 @@
+Command: C:\Espressif\tools\python\v6.0.2\venv\Scripts\python.exe C:\esp\v6.0.2\esp-idf\tools/idf_monitor.py -p COM3 -b 115200 --toolchain-prefix riscv32-esp-elf- --target esp32c3 --revision 3 --decode-panic backtrace D:\Espressif\Workspace\Smart_clock\build\app-template.elf D:\Espressif\Workspace\Smart_clock\build\bootloader\bootloader.elf --force-color -m 'C:\Espressif\tools\python\v6.0.2\venv\Scripts\python.exe' 'C:\esp\v6.0.2\esp-idf\tools\idf.py' '-p' 'COM3'
+could not open port '\\\\.\\COM3': PermissionError(13, 'Access is denied.', None, 5)
