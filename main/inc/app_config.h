@@ -1,8 +1,8 @@
 #pragma once
 
 /* ====== WiFi ====== */
-#define WIFI_SSID          "ASUS_VIVOBOOK"
-#define WIFI_PASS          "leduytan123"
+#define WIFI_SSID          "C427"
+#define WIFI_PASS          "64546743"
 #define WIFI_MAX_RETRY     10
 
 /* ====== Time ====== */

@@ -4,6 +4,7 @@
 #include "display.h"
 #include "wifi_sta.h"
 #include "time_sync.h"
+#include "alarm_data.h"
 
 void app_main(void)
 {
@@ -15,6 +16,8 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
+	ESP_ERROR_CHECK(alarm_data_init());
+		
     /* Display phải được khởi tạo đầu tiên để các module khác gửi được dữ liệu */
     ESP_ERROR_CHECK(display_init());
     display_send(DISPLAY_SRC_SYSTEM, "Smart clock starting...");

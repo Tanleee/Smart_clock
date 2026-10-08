@@ -129,3 +129,62 @@
 #define UI_MENU_SETTIME_Y    128
 #define UI_MENU_SETTIME_W    110
 #define UI_MENU_SETTIME_H    72
+
+/* Nút "+" trên màn Alarm list */
+#define UI_ALARM_ADD_BTN_X     276
+#define UI_ALARM_ADD_BTN_Y     188
+#define UI_ALARM_ADD_BTN_W     32
+#define UI_ALARM_ADD_BTN_H     32
+
+/* Màn New Alarm */
+#define UI_ADDALARM_CLOSE_X        14
+#define UI_ADDALARM_CLOSE_Y        13
+#define UI_ADDALARM_CLOSE_W        28
+#define UI_ADDALARM_CLOSE_H        28
+
+#define UI_ADDALARM_CONFIRM_X      279
+#define UI_ADDALARM_CONFIRM_Y      13
+#define UI_ADDALARM_CONFIRM_W      28
+#define UI_ADDALARM_CONFIRM_H      28
+
+#define UI_ADDALARM_HOUR_UP_X      111
+#define UI_ADDALARM_HOUR_UP_Y      56
+#define UI_ADDALARM_HOUR_UP_W      12
+#define UI_ADDALARM_HOUR_UP_H      9
+
+#define UI_ADDALARM_HOUR_DOWN_X    111
+#define UI_ADDALARM_HOUR_DOWN_Y    147
+#define UI_ADDALARM_HOUR_DOWN_W    12
+#define UI_ADDALARM_HOUR_DOWN_H    9
+
+/* Vùng vẽ số giờ — ước lượng giữa 2 mũi tên, có thể cần chỉnh vài px sau khi test */
+#define UI_ADDALARM_HOUR_DIGIT_X   86
+#define UI_ADDALARM_HOUR_DIGIT_Y   80
+#define UI_ADDALARM_HOUR_DIGIT_W   61
+#define UI_ADDALARM_HOUR_DIGIT_H   50
+
+#define UI_ADDALARM_MIN_UP_X       198
+#define UI_ADDALARM_MIN_UP_Y       56
+#define UI_ADDALARM_MIN_UP_W       12
+#define UI_ADDALARM_MIN_UP_H       9
+
+#define UI_ADDALARM_MIN_DOWN_X     198
+#define UI_ADDALARM_MIN_DOWN_Y     147
+#define UI_ADDALARM_MIN_DOWN_W     12
+#define UI_ADDALARM_MIN_DOWN_H     9
+
+#define UI_ADDALARM_MIN_DIGIT_X    173
+#define UI_ADDALARM_MIN_DIGIT_Y    80
+#define UI_ADDALARM_MIN_DIGIT_W    61
+#define UI_ADDALARM_MIN_DIGIT_H    50
+
+#define UI_ADDALARM_AMPM_X         255
+#define UI_ADDALARM_AMPM_Y         81
+#define UI_ADDALARM_AMPM_W         23
+#define UI_ADDALARM_AMPM_H         50
+
+/* 7 vòng tròn chọn thứ — tâm & bán kính, cách đều 32px */
+#define UI_ADDALARM_DAY0_CX        63
+#define UI_ADDALARM_DAY_CY         195
+#define UI_ADDALARM_DAY_R          12
+#define UI_ADDALARM_DAY_STEP       32
