@@ -1,3 +1,3 @@
 CompileFlags:
-  CompilationDatabase: D:\Espressif\Workspace\Smart_clock\build
+  CompilationDatabase: build
   Remove: [-m*, -f*]

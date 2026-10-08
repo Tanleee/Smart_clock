@@ -72,23 +72,31 @@ static void time_task(void *pvParameters)
     tzset();
 
     /* 5. Gửi giờ vào queue định kỳ */
-    while (1) {
-        time_t now;
-        struct tm timeinfo;
-        char buf[DISPLAY_TEXT_MAX_LEN];
+	while (1) {
+	    time_t now;
+	    struct tm timeinfo;
 
-        time(&now);
-        localtime_r(&now, &timeinfo);
+	    time(&now);
+	    localtime_r(&now, &timeinfo);
 
-        if (timeinfo.tm_year < (2024 - 1900)) {
-            display_send(DISPLAY_SRC_TIME, "Time not synchronized yet");
-        } else {
-            strftime(buf, sizeof(buf), "%a %d/%m/%Y %H:%M:%S", &timeinfo);
-            display_send(DISPLAY_SRC_TIME, "%s", buf);
-        }
+	    if (timeinfo.tm_year < (2024 - 1900)) {
+	        display_send(DISPLAY_SRC_TIME, "Time not synchronized yet");
+	    } else {
+	        char buf_clock[8];
+	        char buf_date[32];
+	        char buf_weekday[16];
 
-        vTaskDelay(pdMS_TO_TICKS(PRINT_PERIOD_MS));
-    }
+	        strftime(buf_clock,   sizeof(buf_clock),   "%H:%M", &timeinfo);
+	        strftime(buf_date,    sizeof(buf_date),    "%a, %b %d, %Y", &timeinfo);
+	        strftime(buf_weekday, sizeof(buf_weekday), "%A", &timeinfo);
+
+	        display_send(DISPLAY_SRC_TIME,    "%s", buf_clock);
+	        display_send(DISPLAY_SRC_DATE,    "%s", buf_date);
+	        display_send(DISPLAY_SRC_WEEKDAY, "%s", buf_weekday);
+	    }
+
+	    vTaskDelay(pdMS_TO_TICKS(PRINT_PERIOD_MS));
+	}
 }
 
 esp_err_t time_sync_start(void)

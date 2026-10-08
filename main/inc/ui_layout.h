@@ -1,0 +1,131 @@
+#pragma once
+
+/* Tọa độ các thành phần trên dashboard 320x240 — trích từ bảng đo đạc. */
+
+/* 1. Giờ "14:35" */
+#define UI_CLOCK_X          15
+#define UI_CLOCK_Y          50
+#define UI_CLOCK_W          150   /* tăng từ 124 */
+#define UI_CLOCK_H          50
+
+/* 2. Ngày "Sat, Apr 26, 2025" */
+#define UI_DATE_X           45
+#define UI_DATE_Y           115
+#define UI_DATE_W           130   /* tăng từ 83 */
+#define UI_DATE_H           10
+
+/* 3. Thứ "Saturday" */
+#define UI_WEEKDAY_X        64
+#define UI_WEEKDAY_Y        138
+#define UI_WEEKDAY_W        70    /* tăng từ 36 */
+#define UI_WEEKDAY_H        8
+
+/* 6. Icon Wi-Fi */
+#define UI_WIFI_ICON_X      264
+#define UI_WIFI_ICON_Y      18
+#define UI_WIFI_ICON_W      17
+#define UI_WIFI_ICON_H      12
+
+/* 7. Icon cường độ tín hiệu */
+#define UI_SIGNAL_ICON_X    286
+#define UI_SIGNAL_ICON_Y    18
+#define UI_SIGNAL_ICON_W    15
+#define UI_SIGNAL_ICON_H    12
+
+/* 8. Icon thời tiết (mây + nắng) */
+#define UI_WEATHER_ICON_X   183
+#define UI_WEATHER_ICON_Y   59
+#define UI_WEATHER_ICON_W   33
+#define UI_WEATHER_ICON_H   28
+
+/* 9. Chữ "Outdoor" */
+#define UI_OUTDOOR_LABEL_X  228
+#define UI_OUTDOOR_LABEL_Y  56
+#define UI_OUTDOOR_LABEL_W  32
+#define UI_OUTDOOR_LABEL_H  8
+
+/* 10. Nhiệt độ ngoài trời "24°C" */
+#define UI_TEMP_OUT_X       228
+#define UI_TEMP_OUT_Y       66
+#define UI_TEMP_OUT_W       40
+#define UI_TEMP_OUT_H       18
+
+/* 11. Chữ "Partly cloudy" */
+#define UI_WEATHER_TEXT_X   228
+#define UI_WEATHER_TEXT_Y   88
+#define UI_WEATHER_TEXT_W   47
+#define UI_WEATHER_TEXT_H   8
+
+/* 12. Icon nhiệt kế lớn */
+#define UI_THERMO_BIG_X     184
+#define UI_THERMO_BIG_Y     129
+#define UI_THERMO_BIG_W     11
+#define UI_THERMO_BIG_H     25
+
+/* 13. Icon giọt nước lớn */
+#define UI_DROP_BIG_X       199
+#define UI_DROP_BIG_Y       140
+#define UI_DROP_BIG_W       10
+#define UI_DROP_BIG_H       14
+
+/* 15. Icon nhiệt kế nhỏ */
+#define UI_THERMO_SM_X      229
+#define UI_THERMO_SM_Y      130
+#define UI_THERMO_SM_W      8
+#define UI_THERMO_SM_H      14
+
+/* 16. Nhiệt độ trong nhà "26.8°C" */
+#define UI_TEMP_IN_X        243
+#define UI_TEMP_IN_Y        132
+#define UI_TEMP_IN_W        37
+#define UI_TEMP_IN_H        12
+
+/* 17. Icon giọt nước nhỏ */
+#define UI_DROP_SM_X        229
+#define UI_DROP_SM_Y        149
+#define UI_DROP_SM_W        8
+#define UI_DROP_SM_H        10
+
+/* 18. Độ ẩm "58%" */
+#define UI_HUMI_X           243
+#define UI_HUMI_Y           148
+#define UI_HUMI_W           23
+#define UI_HUMI_H           12
+
+/* 21. Nút menu tròn "≡" — vùng chạm để mở menu.h */
+#define UI_MENU_BTN_X        274
+#define UI_MENU_BTN_Y        187
+#define UI_MENU_BTN_W        32
+#define UI_MENU_BTN_H        32
+
+// Tọa độ các thành phần trên menu
+
+/* Nút back — vị trí cố định ở mọi menu/sub-screen */
+#define UI_BACK_BTN_X        14
+#define UI_BACK_BTN_Y        14
+#define UI_BACK_BTN_W        28
+#define UI_BACK_BTN_H        28
+
+/* Khung 1: Alarm */
+#define UI_MENU_ALARM_X      45
+#define UI_MENU_ALARM_Y      46
+#define UI_MENU_ALARM_W      110
+#define UI_MENU_ALARM_H      72
+
+/* Khung 2: Stopwatch */
+#define UI_MENU_STOPWATCH_X  165
+#define UI_MENU_STOPWATCH_Y  46
+#define UI_MENU_STOPWATCH_W  110
+#define UI_MENU_STOPWATCH_H  72
+
+/* Khung 3: Pomodoro */
+#define UI_MENU_POMODORO_X   45
+#define UI_MENU_POMODORO_Y   128
+#define UI_MENU_POMODORO_W   110
+#define UI_MENU_POMODORO_H   72
+
+/* Khung 4: Set Time */
+#define UI_MENU_SETTIME_X    165
+#define UI_MENU_SETTIME_Y    128
+#define UI_MENU_SETTIME_W    110
+#define UI_MENU_SETTIME_H    72

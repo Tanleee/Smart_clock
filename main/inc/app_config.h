@@ -15,3 +15,9 @@
 #define DISPLAY_TASK_STACK  3072
 #define DISPLAY_TASK_PRIO   4
 #define DISPLAY_QUEUE_LEN   10
+
+/* ====== Touch task ====== */
+#define TOUCH_TASK_STACK    3072
+#define TOUCH_TASK_PRIO      3
+#define TOUCH_POLL_MS        50
+#define TOUCH_DEBOUNCE_MS    300
