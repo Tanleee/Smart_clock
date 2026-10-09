@@ -71,6 +71,17 @@ esp_err_t alarm_data_add(const alarm_t *a)
     return ESP_ERR_NO_MEM;
 }
 
+esp_err_t alarm_data_update(int index, const alarm_t *a)
+{
+    /* ghi đè đúng ô vật lý đang ứng với "báo thức thứ index" trong danh sách
+     * hợp lệ hiện tại (giữ nguyên vị trí lưu trữ, chỉ đổi nội dung) */
+    alarm_t *slot = alarm_data_get(index);
+    if (!slot) return ESP_ERR_NOT_FOUND;
+    *slot = *a;
+    slot->valid = true;
+    return save_to_nvs();
+}
+
 esp_err_t alarm_data_remove(int index)
 {
     alarm_t *a = alarm_data_get(index);

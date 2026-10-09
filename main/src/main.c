@@ -6,6 +6,9 @@
 #include "time_sync.h"
 #include "alarm_data.h"
 
+#include "alarm_task.h"
+#include "buzzer.h"
+
 void app_main(void)
 {
     /* Khởi tạo NVS (WiFi cần) */
@@ -21,7 +24,11 @@ void app_main(void)
     /* Display phải được khởi tạo đầu tiên để các module khác gửi được dữ liệu */
     ESP_ERROR_CHECK(display_init());
     display_send(DISPLAY_SRC_SYSTEM, "Smart clock starting...");
+	
+	ESP_ERROR_CHECK(buzzer_init());
 
     wifi_sta_init();
     ESP_ERROR_CHECK(time_sync_start());
+	
+	ESP_ERROR_CHECK(alarm_task_start());
 }

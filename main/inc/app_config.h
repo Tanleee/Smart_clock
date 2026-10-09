@@ -21,3 +21,4 @@
 #define TOUCH_TASK_PRIO      3
 #define TOUCH_POLL_MS        50
 #define TOUCH_DEBOUNCE_MS    300
+#define TOUCH_LONG_PRESS_MS  600   /* giữ tay lâu hơn mốc này trên 1 card alarm -> xóa */

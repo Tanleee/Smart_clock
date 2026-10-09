@@ -136,6 +136,15 @@
 #define UI_ALARM_ADD_BTN_W     32
 #define UI_ALARM_ADD_BTN_H     32
 
+/* Danh sách báo thức trên màn Alarm — mỗi báo thức 1 khung round-rect.
+ * Vùng trống còn lại: từ dưới back-btn (y=14+28=42) đến trên nút "+" (y=188) → cao ~146px. */
+#define UI_ALARMLIST_X          14
+#define UI_ALARMLIST_Y0         48     /* y của card đầu tiên */
+#define UI_ALARMLIST_W          292
+#define UI_ALARMLIST_H          40     /* chiều cao mỗi card */
+#define UI_ALARMLIST_GAP        8      /* khoảng cách giữa 2 card */
+#define UI_ALARMLIST_VISIBLE    3      /* số card hiển thị vừa, không cuộn — xem ghi chú trong display.cpp */
+
 /* Màn New Alarm */
 #define UI_ADDALARM_CLOSE_X        14
 #define UI_ADDALARM_CLOSE_Y        13
@@ -147,15 +156,19 @@
 #define UI_ADDALARM_CONFIRM_W      28
 #define UI_ADDALARM_CONFIRM_H      28
 
-#define UI_ADDALARM_HOUR_UP_X      111
-#define UI_ADDALARM_HOUR_UP_Y      56
-#define UI_ADDALARM_HOUR_UP_W      12
-#define UI_ADDALARM_HOUR_UP_H      9
+/* Vùng CHẠM của nút tăng/giảm giờ-phút, KHÔNG phải kích thước icon vẽ (icon vẫn
+ * nằm nguyên trong ảnh nền add_alarm_bg). Mở rộng ra 2 bên + cao hơn nhiều so với
+ * icon mũi tên gốc (12x9) để ngón tay dễ bấm trúng, vẫn canh giữa theo đúng tâm
+ * icon cũ nên không cần sửa gì bên vẽ. Có thể cần chỉnh vài px sau khi test tay. */
+#define UI_ADDALARM_HOUR_UP_X      97
+#define UI_ADDALARM_HOUR_UP_Y      46
+#define UI_ADDALARM_HOUR_UP_W      40
+#define UI_ADDALARM_HOUR_UP_H      29
 
-#define UI_ADDALARM_HOUR_DOWN_X    111
-#define UI_ADDALARM_HOUR_DOWN_Y    147
-#define UI_ADDALARM_HOUR_DOWN_W    12
-#define UI_ADDALARM_HOUR_DOWN_H    9
+#define UI_ADDALARM_HOUR_DOWN_X    97
+#define UI_ADDALARM_HOUR_DOWN_Y    137
+#define UI_ADDALARM_HOUR_DOWN_W    40
+#define UI_ADDALARM_HOUR_DOWN_H    29
 
 /* Vùng vẽ số giờ — ước lượng giữa 2 mũi tên, có thể cần chỉnh vài px sau khi test */
 #define UI_ADDALARM_HOUR_DIGIT_X   86
@@ -163,15 +176,15 @@
 #define UI_ADDALARM_HOUR_DIGIT_W   61
 #define UI_ADDALARM_HOUR_DIGIT_H   50
 
-#define UI_ADDALARM_MIN_UP_X       198
-#define UI_ADDALARM_MIN_UP_Y       56
-#define UI_ADDALARM_MIN_UP_W       12
-#define UI_ADDALARM_MIN_UP_H       9
+#define UI_ADDALARM_MIN_UP_X       184
+#define UI_ADDALARM_MIN_UP_Y       46
+#define UI_ADDALARM_MIN_UP_W       40
+#define UI_ADDALARM_MIN_UP_H       29
 
-#define UI_ADDALARM_MIN_DOWN_X     198
-#define UI_ADDALARM_MIN_DOWN_Y     147
-#define UI_ADDALARM_MIN_DOWN_W     12
-#define UI_ADDALARM_MIN_DOWN_H     9
+#define UI_ADDALARM_MIN_DOWN_X     184
+#define UI_ADDALARM_MIN_DOWN_Y     137
+#define UI_ADDALARM_MIN_DOWN_W     40
+#define UI_ADDALARM_MIN_DOWN_H     29
 
 #define UI_ADDALARM_MIN_DIGIT_X    173
 #define UI_ADDALARM_MIN_DIGIT_Y    80
@@ -188,3 +201,14 @@
 #define UI_ADDALARM_DAY_CY         195
 #define UI_ADDALARM_DAY_R          12
 #define UI_ADDALARM_DAY_STEP       32
+
+/* Khung thông báo báo thức đang reo — hiện giữa màn 320x240, đè lên mọi màn hình khác */
+#define UI_RING_CARD_X      40
+#define UI_RING_CARD_Y      68
+#define UI_RING_CARD_W      240
+#define UI_RING_CARD_H      120
+
+#define UI_RING_BTN_X        110
+#define UI_RING_BTN_Y        150
+#define UI_RING_BTN_W        100
+#define UI_RING_BTN_H         28

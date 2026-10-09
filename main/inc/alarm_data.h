@@ -21,6 +21,7 @@ esp_err_t alarm_data_init(void);
 int       alarm_data_count(void);
 alarm_t  *alarm_data_get(int index);
 esp_err_t alarm_data_add(const alarm_t *a);
+esp_err_t alarm_data_update(int index, const alarm_t *a);
 esp_err_t alarm_data_remove(int index);
 esp_err_t alarm_data_set_enabled(int index, bool enabled);
 
