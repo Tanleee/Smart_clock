@@ -212,3 +212,31 @@
 #define UI_RING_BTN_Y        150
 #define UI_RING_BTN_W        100
 #define UI_RING_BTN_H         28
+
+/* Khung Stopwatch — toạ độ lấy từ Lopaka, đã canh sẵn */
+#define UI_SW_BOX_X          60
+#define UI_SW_BOX_Y          65
+#define UI_SW_BOX_W         200
+#define UI_SW_BOX_H         140
+#define UI_SW_BOX_RADIUS     10
+
+#define UI_SW_TIME_X         110
+#define UI_SW_TIME_Y         97
+#define UI_SW_TIME_W        120
+#define UI_SW_TIME_H         32
+
+#define UI_SW_TOGGLE_CX     115
+#define UI_SW_TOGGLE_CY     168
+#define UI_SW_TOGGLE_R       15
+#define UI_SW_TOGGLE_ICON_X 109
+#define UI_SW_TOGGLE_ICON_Y 161
+#define UI_SW_TOGGLE_ICON_W  12
+#define UI_SW_TOGGLE_ICON_H  16
+
+#define UI_SW_RESET_CX      203
+#define UI_SW_RESET_CY      168
+#define UI_SW_RESET_R        15
+#define UI_SW_RESET_ICON_X  198
+#define UI_SW_RESET_ICON_Y  160
+#define UI_SW_RESET_ICON_W   11
+#define UI_SW_RESET_ICON_H   16

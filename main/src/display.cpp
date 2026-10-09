@@ -22,6 +22,11 @@
 #include "images/timeset.h"
 #include "images/add_alarm.h"
 
+#include "stopwatch.h"
+#include "images/image_music_pause_bits.h"
+#include "images/image_music_play_bits.h"
+#include "images/image_device_reset_bits.h"
+
 static const char *TAG         = "smart_clock";
 static const char *TAG_DISPLAY = "display";
 
@@ -293,7 +298,7 @@ void display_send(display_source_t src, const char *fmt, ...)
      lcd.setTextColor(TFT_BLACK, TFT_CYAN);
      lcd.drawString("DISMISS", UI_RING_BTN_X + 18, UI_RING_BTN_Y + 7);
  }
-
+ 
  /* Xoá overlay bằng cách vẽ lại đúng màn hình hiện tại ở dưới nó */
  static void ui_clear_alarm_ring_overlay(void)
  {
@@ -320,6 +325,48 @@ void display_send(display_source_t src, const char *fmt, ...)
          ui_draw_ampm(s_draft_is_pm);
          for (int d = 0; d < 7; d++) ui_draw_day_circle_at(d, s_draft_days[d]);
      }
+ }
+ 
+ static void ui_draw_stopwatch_time(uint32_t elapsed_sec)
+ {
+     uint32_t hh = elapsed_sec / 3600;
+     uint32_t mm = (elapsed_sec / 60) % 60;
+     uint32_t ss = elapsed_sec % 60;
+     char buf[24];
+     snprintf(buf, sizeof(buf), "%02u:%02u:%02u", (unsigned)hh, (unsigned)mm, (unsigned)ss);
+
+     const uint16_t box_bg = lcd.color565(8, 16, 36);
+     lcd.fillRect(UI_SW_TIME_X, UI_SW_TIME_Y, UI_SW_TIME_W, UI_SW_TIME_H, box_bg);
+     lcd.setFont(&fonts::Font4);
+     lcd.setTextColor(TFT_WHITE, box_bg);
+     lcd.drawString(buf, UI_SW_TIME_X, UI_SW_TIME_Y);
+ }
+
+ static void ui_draw_stopwatch_toggle_icon(bool running)
+ {
+     lcd.fillCircle(UI_SW_TOGGLE_CX, UI_SW_TOGGLE_CY, UI_SW_TOGGLE_R, TFT_CYAN);
+     lcd.drawBitmap(UI_SW_TOGGLE_ICON_X, UI_SW_TOGGLE_ICON_Y,
+                    running ? image_music_pause_bits : image_music_play_bits,
+                    UI_SW_TOGGLE_ICON_W, UI_SW_TOGGLE_ICON_H, TFT_BLACK);
+ }
+
+ static void ui_draw_stopwatch_reset_icon(void)
+ {
+     const uint16_t reset_color = lcd.color565(255, 160, 40);   /* cam, đồng tông gradient nền dashboard */
+     lcd.fillCircle(UI_SW_RESET_CX, UI_SW_RESET_CY, UI_SW_RESET_R, reset_color);
+     lcd.drawBitmap(UI_SW_RESET_ICON_X, UI_SW_RESET_ICON_Y,
+                    image_device_reset_bits, UI_SW_RESET_ICON_W, UI_SW_RESET_ICON_H, TFT_BLACK);
+ }
+
+ static void ui_draw_stopwatch_screen(void)
+ {
+     const uint16_t box_bg = lcd.color565(8, 16, 36);
+     lcd.fillRoundRect(UI_SW_BOX_X, UI_SW_BOX_Y, UI_SW_BOX_W, UI_SW_BOX_H, UI_SW_BOX_RADIUS, box_bg);
+     lcd.drawRoundRect(UI_SW_BOX_X, UI_SW_BOX_Y, UI_SW_BOX_W, UI_SW_BOX_H, UI_SW_BOX_RADIUS, TFT_CYAN);
+
+     ui_draw_stopwatch_time(stopwatch_get_elapsed());
+     ui_draw_stopwatch_toggle_icon(stopwatch_is_running());
+     ui_draw_stopwatch_reset_icon();
  }
  
 static std::uint16_t s_touch_cal[8] = { 3625, 309, 3732, 3759, 403, 273, 457, 3687 };
@@ -405,6 +452,9 @@ static void display_task(void *pvParameters)
 							                            UI_ADDALARM_MIN_DIGIT_W, UI_ADDALARM_MIN_DIGIT_H, s_draft_minute);
 							    ui_draw_ampm(s_draft_is_pm);
 							    for (int d = 0; d < 7; d++) ui_draw_day_circle_at(d, s_draft_days[d]);
+							} 
+							else if (s_current_screen == SCREEN_STOPWATCH) {
+							    ui_draw_stopwatch_screen();
 							}
 							
 				            break;
@@ -511,6 +561,19 @@ static void display_task(void *pvParameters)
 				    display_send(DISPLAY_SRC_SCREEN, "ALARM");
 				    break;
 				
+				case DISPLAY_SRC_STOPWATCH:
+				    if (s_current_screen == SCREEN_STOPWATCH) {
+				        if (strcmp(msg.text, "TICK") == 0) {
+				            ui_draw_stopwatch_time(stopwatch_get_elapsed());
+				        } else if (strcmp(msg.text, "TOGGLE") == 0) {
+				            ui_draw_stopwatch_toggle_icon(stopwatch_is_running());
+				        } else if (strcmp(msg.text, "RESET") == 0) {
+				            ui_draw_stopwatch_time(stopwatch_get_elapsed());
+				            ui_draw_stopwatch_toggle_icon(stopwatch_is_running());
+				        }
+				    }
+				    break;					
+					
 				case DISPLAY_SRC_WIFI:
 				case DISPLAY_SRC_SNTP:
 				case DISPLAY_SRC_SYSTEM:
@@ -603,12 +666,29 @@ static void touch_task(void *pvParameters)
                             display_send(DISPLAY_SRC_SCREEN, "TIMESET");
                         break;
 
-                    case SCREEN_STOPWATCH:
-                    case SCREEN_POMODORO:
-                    case SCREEN_TIMESET:
-                        if (IN_RECT(tx, ty, UI_BACK_BTN_X, UI_BACK_BTN_Y, UI_BACK_BTN_W, UI_BACK_BTN_H))
-                            display_send(DISPLAY_SRC_SCREEN, "MENU");
-                        break;
+					case SCREEN_STOPWATCH:
+					    if (IN_RECT(tx, ty, UI_BACK_BTN_X, UI_BACK_BTN_Y, UI_BACK_BTN_W, UI_BACK_BTN_H)) {
+					        display_send(DISPLAY_SRC_SCREEN, "MENU");
+					    } else {
+					        int32_t dx = tx - UI_SW_TOGGLE_CX, dy = ty - UI_SW_TOGGLE_CY;
+					        if (dx * dx + dy * dy <= UI_SW_TOGGLE_R * UI_SW_TOGGLE_R) {
+					            stopwatch_toggle();
+					            display_send(DISPLAY_SRC_STOPWATCH, "TOGGLE");
+					        } else {
+					            dx = tx - UI_SW_RESET_CX; dy = ty - UI_SW_RESET_CY;
+					            if (dx * dx + dy * dy <= UI_SW_RESET_R * UI_SW_RESET_R) {
+					                stopwatch_reset();
+					                display_send(DISPLAY_SRC_STOPWATCH, "RESET");
+					            }
+					        }
+					    }
+					    break;
+
+					case SCREEN_POMODORO:
+					case SCREEN_TIMESET:
+					    if (IN_RECT(tx, ty, UI_BACK_BTN_X, UI_BACK_BTN_Y, UI_BACK_BTN_W, UI_BACK_BTN_H))
+					        display_send(DISPLAY_SRC_SCREEN, "MENU");
+					    break;
 
                     case SCREEN_ADD_ALARM:
                         if (IN_RECT(tx, ty, UI_ADDALARM_CLOSE_X, UI_ADDALARM_CLOSE_Y, UI_ADDALARM_CLOSE_W, UI_ADDALARM_CLOSE_H)) {

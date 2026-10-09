@@ -8,6 +8,7 @@
 
 #include "alarm_task.h"
 #include "buzzer.h"
+#include "stopwatch.h"
 
 void app_main(void)
 {
@@ -31,4 +32,6 @@ void app_main(void)
     ESP_ERROR_CHECK(time_sync_start());
 	
 	ESP_ERROR_CHECK(alarm_task_start());
+	
+	ESP_ERROR_CHECK(stopwatch_task_start());
 }
