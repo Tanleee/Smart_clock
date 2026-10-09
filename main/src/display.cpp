@@ -10,6 +10,7 @@
 #include "app_config.h"
 #include "LGFX_Config.hpp"
 #include "display.h"
+
 #include "ui_layout.h"
 #include "alarm_data.h"
 #include "buzzer.h"
@@ -18,7 +19,6 @@
 #include "images/menu.h"
 #include "images/alarm.h"
 #include "images/stopwatch.h"
-#include "images/pomodoro.h"
 #include "images/timeset.h"
 #include "images/add_alarm.h"
 
@@ -26,6 +26,11 @@
 #include "images/image_music_pause_bits.h"
 #include "images/image_music_play_bits.h"
 #include "images/image_device_reset_bits.h"
+
+#include "pomodoro.h"
+#include "images/image_music_fast_forward_bits.h"
+#include "images/pomodoro_run.h"
+#include "images/pomodoro_setup.h"
 
 static const char *TAG         = "smart_clock";
 static const char *TAG_DISPLAY = "display";
@@ -39,6 +44,7 @@ typedef enum {
     SCREEN_ALARM,
     SCREEN_STOPWATCH,
     SCREEN_POMODORO,
+    SCREEN_POMODORO_RUN,   
     SCREEN_TIMESET,
     SCREEN_ADD_ALARM,   
     SCREEN_COUNT
@@ -54,13 +60,14 @@ typedef struct {
 } screen_entry_t;
 
 static const screen_entry_t s_screens[SCREEN_COUNT] = {
-    [SCREEN_DASHBOARD] = { "DASHBOARD", DASHBOARD_WIDTH, DASHBOARD_HEIGHT, dashboard },
-    [SCREEN_MENU]      = { "MENU",      MENU_WIDTH,      MENU_HEIGHT,      menu      },
-    [SCREEN_ALARM]     = { "ALARM",     ALARM_WIDTH,     ALARM_HEIGHT,     alarm_bg  },
-    [SCREEN_STOPWATCH] = { "STOPWATCH", STOPWATCH_WIDTH, STOPWATCH_HEIGHT, stopwatch },
-    [SCREEN_POMODORO]  = { "POMODORO",  POMODORO_WIDTH,  POMODORO_HEIGHT,  pomodoro  },
-    [SCREEN_TIMESET]   = { "TIMESET",   TIMESET_WIDTH,   TIMESET_HEIGHT,   timeset   },
-    [SCREEN_ADD_ALARM] = { "ADDALARM",  ADDALARM_WIDTH,  ADDALARM_HEIGHT,  add_alarm_bg },
+    [SCREEN_DASHBOARD]    = { "DASHBOARD", DASHBOARD_WIDTH,     DASHBOARD_HEIGHT,     dashboard      },
+    [SCREEN_MENU]         = { "MENU",      MENU_WIDTH,          MENU_HEIGHT,          menu           },
+    [SCREEN_ALARM]        = { "ALARM",     ALARM_WIDTH,         ALARM_HEIGHT,         alarm_bg       },
+    [SCREEN_STOPWATCH]    = { "STOPWATCH", STOPWATCH_WIDTH,     STOPWATCH_HEIGHT,     stopwatch      },
+    [SCREEN_POMODORO]     = { "POMODORO",  POMODORO_SETUP_WIDTH, POMODORO_SETUP_HEIGHT, pomodoro_setup },
+    [SCREEN_POMODORO_RUN] = { "POMORUN",   POMODORO_RUN_WIDTH,  POMODORO_RUN_HEIGHT,  pomodoro_run_bg },
+    [SCREEN_TIMESET]      = { "TIMESET",   TIMESET_WIDTH,       TIMESET_HEIGHT,       timeset        },
+    [SCREEN_ADD_ALARM]    = { "ADDALARM",  ADDALARM_WIDTH,      ADDALARM_HEIGHT,      add_alarm_bg   },
 };
 
 static char s_cached_time[8]     = {0};
@@ -368,6 +375,148 @@ void display_send(display_source_t src, const char *fmt, ...)
      ui_draw_stopwatch_toggle_icon(stopwatch_is_running());
      ui_draw_stopwatch_reset_icon();
  }
+
+ static const int32_t s_pset_row_y[POMO_FIELD_COUNT] = {
+     UI_PSET_ROW0_Y, UI_PSET_ROW1_Y, UI_PSET_ROW2_Y, UI_PSET_ROW3_Y
+ };
+ 
+ static void ui_draw_pomodoro_setup_row(pomodoro_field_t field, int32_t row_y)
+ {
+     char buf[4];
+     snprintf(buf, sizeof(buf), "%d", pomodoro_cfg_get(field));
+     const uint16_t box_bg = lcd.color565(8, 16, 36);
+     lcd.fillRect(UI_PSET_VAL_X, row_y, UI_PSET_VAL_W, UI_PSET_ROW_H, box_bg);
+     lcd.setFont(&fonts::Font0);
+     lcd.setTextColor(TFT_CYAN, box_bg);
+     lcd.drawString(buf, UI_PSET_VAL_X + 2, row_y + 4);
+ }
+
+ static void ui_draw_pomodoro_setup_screen(void)
+ {
+     for (int f = 0; f < POMO_FIELD_COUNT; f++)
+         ui_draw_pomodoro_setup_row((pomodoro_field_t)f, s_pset_row_y[f]);
+ }
+
+ static const char *pomo_phase_label(pomodoro_phase_t phase)
+ {
+     switch (phase) {
+         case POMO_PHASE_FOCUS:      return "FOCUS";
+         case POMO_PHASE_BREAK:      return "BREAK";
+         case POMO_PHASE_LONG_BREAK: return "LONG BREAK";
+     }
+     return "";
+ }
+
+ static void ui_draw_pomodoro_run_time(void)
+ {
+     uint32_t sec = pomodoro_get_remaining_sec();
+     uint32_t mm = sec / 60, ss = sec % 60;
+     char buf[16];
+     snprintf(buf, sizeof(buf), "%02u:%02u", (unsigned)mm, (unsigned)ss);
+
+     int32_t w = 150, h = 48;
+     int32_t x = UI_POMO_RING_CX - w / 2, y = UI_POMO_RING_CY - h / 2;
+
+     LGFX_Sprite spr(&lcd);
+     spr.setColorDepth(16);
+     spr.setSwapBytes(true);
+     spr.createSprite(w, h);
+
+     /* khôi phục nền từ ảnh gốc vào sprite */
+     for (int32_t row = 0; row < h; row++) {
+         spr.pushImage(0, row, w, 1,
+                       &pomodoro_run_bg[(y + row) * POMODORO_RUN_WIDTH + x]);
+     }
+
+     spr.setFont(&fonts::Font7);
+     spr.setTextColor(TFT_CYAN);    /* vẽ trong suốt lên nền sprite vừa khôi phục */
+     spr.setTextDatum(MC_DATUM);    /* căn giữa theo cả chiều ngang lẫn dọc */
+     spr.drawString(buf, w / 2, h / 2);
+
+     spr.pushSprite(x, y);
+     spr.deleteSprite();
+ }
+ static void ui_draw_pomodoro_run_label(void)
+ {
+     ui_restore_bg_region(UI_POMO_LABEL_X, UI_POMO_LABEL_Y, UI_POMO_LABEL_W, UI_POMO_LABEL_H,
+                          pomodoro_run_bg, POMODORO_RUN_WIDTH);
+     lcd.setFont(&fonts::Font0);
+     lcd.setTextColor(TFT_WHITE);
+     lcd.drawString(pomo_phase_label(pomodoro_get_phase()), UI_POMO_LABEL_X, UI_POMO_LABEL_Y);
+ }
+
+ static void ui_draw_pomodoro_run_dots(void)
+ {
+     ui_restore_bg_region(UI_POMO_DOTS_X, UI_POMO_DOTS_Y, UI_POMO_DOTS_W, UI_POMO_DOTS_H,
+                          pomodoro_run_bg, POMODORO_RUN_WIDTH);
+     int reps = pomodoro_cfg_get(POMO_FIELD_REPS);
+     int cur  = pomodoro_get_rep();
+     if (reps <= 0) return;
+     int32_t step = UI_POMO_DOTS_W / reps;
+     for (int i = 0; i < reps; i++) {
+         int32_t cx = UI_POMO_DOTS_X + step * i + step / 2;
+         int32_t cy = UI_POMO_DOTS_Y + UI_POMO_DOTS_H / 2;
+         if (i + 1 <= cur) lcd.fillCircle(cx, cy, 2, TFT_CYAN);
+         else              lcd.drawCircle(cx, cy, 2, TFT_DARKGREY);
+     }
+ }
+
+ static void ui_draw_pomodoro_run_rep(void)
+ {
+     ui_restore_bg_region(UI_POMO_REP_X, UI_POMO_REP_Y, UI_POMO_REP_W, UI_POMO_REP_H,
+                          pomodoro_run_bg, POMODORO_RUN_WIDTH);
+     char buf[16];
+     snprintf(buf, sizeof(buf), "Rep %d/%d", pomodoro_get_rep(), pomodoro_cfg_get(POMO_FIELD_REPS));
+     lcd.setFont(&fonts::Font0);
+     lcd.setTextColor(TFT_WHITE);
+     lcd.drawString(buf, UI_POMO_REP_X, UI_POMO_REP_Y);
+ }
+
+ static void ui_draw_pomodoro_run_toggle_btn(void)
+ {
+     bool running = pomodoro_is_running();
+     const uint16_t btn_bg = lcd.color565(8, 16, 36);
+     lcd.fillRoundRect(UI_POMO_PAUSE_BTN_X, UI_POMO_PAUSE_BTN_Y, UI_POMO_PAUSE_BTN_W, UI_POMO_PAUSE_BTN_H, 8, btn_bg);
+     lcd.drawRoundRect(UI_POMO_PAUSE_BTN_X, UI_POMO_PAUSE_BTN_Y, UI_POMO_PAUSE_BTN_W, UI_POMO_PAUSE_BTN_H, 8, TFT_CYAN);
+
+     int32_t icon_x = UI_POMO_PAUSE_BTN_X + UI_POMO_BTN_ICON_PAD_X;
+     int32_t icon_y = UI_POMO_PAUSE_BTN_Y + UI_POMO_BTN_ICON_Y_OFF;
+     lcd.drawBitmap(icon_x, icon_y, running ? image_music_pause_bits : image_music_play_bits,
+                    12, 16, TFT_CYAN);
+
+     lcd.setFont(&fonts::Font0);
+     lcd.setTextColor(TFT_CYAN, btn_bg);
+     lcd.drawString(running ? "PAUSE" : "RESUME",
+                    icon_x + 12 + UI_POMO_BTN_TEXT_GAP,
+                    UI_POMO_PAUSE_BTN_Y + (UI_POMO_PAUSE_BTN_H - 8) / 2);
+ }
+
+ static void ui_draw_pomodoro_run_skip_btn(void)
+ {
+     const uint16_t btn_bg = lcd.color565(8, 16, 36);
+     lcd.fillRoundRect(UI_POMO_SKIP_BTN_X, UI_POMO_SKIP_BTN_Y, UI_POMO_SKIP_BTN_W, UI_POMO_SKIP_BTN_H, 8, btn_bg);
+     lcd.drawRoundRect(UI_POMO_SKIP_BTN_X, UI_POMO_SKIP_BTN_Y, UI_POMO_SKIP_BTN_W, UI_POMO_SKIP_BTN_H, 8, TFT_CYAN);
+
+     int32_t icon_x = UI_POMO_SKIP_BTN_X + UI_POMO_BTN_ICON_PAD_X;
+     int32_t icon_y = UI_POMO_SKIP_BTN_Y + UI_POMO_BTN_ICON_Y_OFF;
+     lcd.drawBitmap(icon_x, icon_y, image_music_fast_forward_bits, UI_POMO_SKIP_ICON_W, UI_POMO_SKIP_ICON_H, TFT_CYAN);
+
+     lcd.setFont(&fonts::Font0);
+     lcd.setTextColor(TFT_CYAN, btn_bg);
+     lcd.drawString("SKIP",
+                    icon_x + UI_POMO_SKIP_ICON_W + UI_POMO_BTN_TEXT_GAP,
+                    UI_POMO_SKIP_BTN_Y + (UI_POMO_SKIP_BTN_H - 8) / 2);
+ }
+
+ static void ui_draw_pomodoro_run_screen(void)
+ {
+     ui_draw_pomodoro_run_time();
+     ui_draw_pomodoro_run_label();
+     ui_draw_pomodoro_run_dots();
+     ui_draw_pomodoro_run_rep();
+     ui_draw_pomodoro_run_toggle_btn();
+     ui_draw_pomodoro_run_skip_btn();
+ }
  
 static std::uint16_t s_touch_cal[8] = { 3625, 309, 3732, 3759, 403, 273, 457, 3687 };
  
@@ -455,6 +604,12 @@ static void display_task(void *pvParameters)
 							} 
 							else if (s_current_screen == SCREEN_STOPWATCH) {
 							    ui_draw_stopwatch_screen();
+							}
+							else if (s_current_screen == SCREEN_POMODORO) {
+							    ui_draw_pomodoro_setup_screen();
+							}
+							else if (s_current_screen == SCREEN_POMODORO_RUN) {
+							    ui_draw_pomodoro_run_screen();
 							}
 							
 				            break;
@@ -573,7 +728,28 @@ static void display_task(void *pvParameters)
 				        }
 				    }
 				    break;					
-					
+				
+				case DISPLAY_SRC_POMODORO:
+				    if (strcmp(msg.text, "CFG") == 0) {
+				        if (s_current_screen == SCREEN_POMODORO) ui_draw_pomodoro_setup_screen();
+				    } else if (strcmp(msg.text, "TICK") == 0) {
+				        if (s_current_screen == SCREEN_POMODORO_RUN) {
+				            
+				            ui_draw_pomodoro_run_time();
+				        }
+				    } else if (strcmp(msg.text, "PHASE") == 0) {
+				        if (s_current_screen == SCREEN_POMODORO_RUN) {
+							
+				            ui_draw_pomodoro_run_time();
+				            ui_draw_pomodoro_run_label();
+				            ui_draw_pomodoro_run_dots();
+				            ui_draw_pomodoro_run_rep();
+				        }
+				    } else if (strcmp(msg.text, "DONE") == 0 || strcmp(msg.text, "TOGGLE") == 0) {
+				        if (s_current_screen == SCREEN_POMODORO_RUN) ui_draw_pomodoro_run_toggle_btn();
+				    }
+				    break;
+						
 				case DISPLAY_SRC_WIFI:
 				case DISPLAY_SRC_SNTP:
 				case DISPLAY_SRC_SYSTEM:
@@ -685,6 +861,39 @@ static void touch_task(void *pvParameters)
 					    break;
 
 					case SCREEN_POMODORO:
+					    if (IN_RECT(tx, ty, UI_BACK_BTN_X, UI_BACK_BTN_Y, UI_BACK_BTN_W, UI_BACK_BTN_H)) {
+					        display_send(DISPLAY_SRC_SCREEN, "MENU");
+					    } else if (IN_RECT(tx, ty, UI_PSET_START_X, UI_PSET_START_Y, UI_PSET_START_W, UI_PSET_START_H)) {
+					        pomodoro_start();
+					        display_send(DISPLAY_SRC_SCREEN, "POMORUN");
+					    } else {
+					        for (int f = 0; f < POMO_FIELD_COUNT; f++) {
+					            int32_t ry = s_pset_row_y[f];
+					            if (IN_RECT(tx, ty, UI_PSET_MINUS_X, ry, UI_PSET_MINUS_W, UI_PSET_ROW_H)) {
+					                pomodoro_cfg_adjust((pomodoro_field_t)f, -1);
+					                display_send(DISPLAY_SRC_POMODORO, "CFG");
+					                break;
+					            } else if (IN_RECT(tx, ty, UI_PSET_PLUS_X, ry, UI_PSET_PLUS_W, UI_PSET_ROW_H)) {
+					                pomodoro_cfg_adjust((pomodoro_field_t)f, 1);
+					                display_send(DISPLAY_SRC_POMODORO, "CFG");
+					                break;
+					            }
+					        }
+					    }
+					    break;
+
+					case SCREEN_POMODORO_RUN:
+					    if (IN_RECT(tx, ty, UI_BACK_BTN_X, UI_BACK_BTN_Y, UI_BACK_BTN_W, UI_BACK_BTN_H)) {
+					        display_send(DISPLAY_SRC_SCREEN, "MENU");
+					    } else if (IN_RECT(tx, ty, UI_POMO_PAUSE_BTN_X, UI_POMO_PAUSE_BTN_Y, UI_POMO_PAUSE_BTN_W, UI_POMO_PAUSE_BTN_H)) {
+					        pomodoro_toggle();
+					        display_send(DISPLAY_SRC_POMODORO, "TOGGLE");
+					    } else if (IN_RECT(tx, ty, UI_POMO_SKIP_BTN_X, UI_POMO_SKIP_BTN_Y, UI_POMO_SKIP_BTN_W, UI_POMO_SKIP_BTN_H)) {
+					        pomodoro_stop();
+					        display_send(DISPLAY_SRC_SCREEN, "POMODORO");   /* Skip -> quay lại Setup, theo đúng ý bạn */
+					    }
+					    break;
+
 					case SCREEN_TIMESET:
 					    if (IN_RECT(tx, ty, UI_BACK_BTN_X, UI_BACK_BTN_Y, UI_BACK_BTN_W, UI_BACK_BTN_H))
 					        display_send(DISPLAY_SRC_SCREEN, "MENU");

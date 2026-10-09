@@ -240,3 +240,59 @@
 #define UI_SW_RESET_ICON_Y  160
 #define UI_SW_RESET_ICON_W   11
 #define UI_SW_RESET_ICON_H   16
+
+/* ===== Pomodoro Setup ===== */
+#define UI_PSET_ROW0_Y    61   /* Focus Duration */
+#define UI_PSET_ROW1_Y    92   /* Break Duration */
+#define UI_PSET_ROW2_Y   123   /* Long Break Duration */
+#define UI_PSET_ROW3_Y   154   /* Number of Reps */
+#define UI_PSET_ROW_H     18
+
+#define UI_PSET_MINUS_X  195
+#define UI_PSET_MINUS_W   16
+#define UI_PSET_VAL_X     214
+#define UI_PSET_VAL_W      17
+#define UI_PSET_PLUS_X    234
+#define UI_PSET_PLUS_W     16
+
+#define UI_PSET_START_X    64
+#define UI_PSET_START_Y   185
+#define UI_PSET_START_W   191
+#define UI_PSET_START_H    23
+
+/* ===== Pomodoro đang chạy ===== */
+#define UI_POMO_RING_CX   160
+#define UI_POMO_RING_CY    95
+#define UI_POMO_RING_R     45
+
+#define UI_POMO_LABEL_X   146
+#define UI_POMO_LABEL_Y   145
+#define UI_POMO_LABEL_W   100
+#define UI_POMO_LABEL_H    10
+
+#define UI_POMO_DOTS_X    130
+#define UI_POMO_DOTS_Y    160
+#define UI_POMO_DOTS_W     60
+#define UI_POMO_DOTS_H      6
+
+#define UI_POMO_REP_X     140
+#define UI_POMO_REP_Y     170
+#define UI_POMO_REP_W      80
+#define UI_POMO_REP_H       8
+
+#define UI_POMO_PAUSE_BTN_X   75
+#define UI_POMO_PAUSE_BTN_Y  182
+#define UI_POMO_PAUSE_BTN_W   80
+#define UI_POMO_PAUSE_BTN_H   22
+
+#define UI_POMO_SKIP_BTN_X   165
+#define UI_POMO_SKIP_BTN_Y   182
+#define UI_POMO_SKIP_BTN_W    80
+#define UI_POMO_SKIP_BTN_H    22
+
+#define UI_POMO_BTN_ICON_PAD_X   8
+#define UI_POMO_BTN_ICON_Y_OFF   3
+#define UI_POMO_BTN_TEXT_GAP     4
+
+#define UI_POMO_SKIP_ICON_W  19
+#define UI_POMO_SKIP_ICON_H  16
