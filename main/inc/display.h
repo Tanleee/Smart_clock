@@ -19,6 +19,7 @@ typedef enum {
     DISPLAY_SRC_ALARM_SAVE,
 	DISPLAY_SRC_STOPWATCH,
 	DISPLAY_SRC_POMODORO,    
+	DISPLAY_SRC_TIMESET,     
     DISPLAY_SRC_MAX
 } display_source_t;
 

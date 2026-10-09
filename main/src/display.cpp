@@ -7,6 +7,9 @@
 #include "freertos/queue.h"
 #include "esp_log.h"
 
+#include <time.h>
+#include <sys/time.h>
+
 #include "app_config.h"
 #include "LGFX_Config.hpp"
 #include "display.h"
@@ -19,7 +22,7 @@
 #include "images/menu.h"
 #include "images/alarm.h"
 #include "images/stopwatch.h"
-#include "images/timeset.h"
+#include "images/settime.h"
 #include "images/add_alarm.h"
 
 #include "stopwatch.h"
@@ -60,14 +63,14 @@ typedef struct {
 } screen_entry_t;
 
 static const screen_entry_t s_screens[SCREEN_COUNT] = {
-    [SCREEN_DASHBOARD]    = { "DASHBOARD", DASHBOARD_WIDTH,     DASHBOARD_HEIGHT,     dashboard      },
-    [SCREEN_MENU]         = { "MENU",      MENU_WIDTH,          MENU_HEIGHT,          menu           },
-    [SCREEN_ALARM]        = { "ALARM",     ALARM_WIDTH,         ALARM_HEIGHT,         alarm_bg       },
-    [SCREEN_STOPWATCH]    = { "STOPWATCH", STOPWATCH_WIDTH,     STOPWATCH_HEIGHT,     stopwatch      },
-    [SCREEN_POMODORO]     = { "POMODORO",  POMODORO_SETUP_WIDTH, POMODORO_SETUP_HEIGHT, pomodoro_setup },
-    [SCREEN_POMODORO_RUN] = { "POMORUN",   POMODORO_RUN_WIDTH,  POMODORO_RUN_HEIGHT,  pomodoro_run_bg },
-    [SCREEN_TIMESET]      = { "TIMESET",   TIMESET_WIDTH,       TIMESET_HEIGHT,       timeset        },
-    [SCREEN_ADD_ALARM]    = { "ADDALARM",  ADDALARM_WIDTH,      ADDALARM_HEIGHT,      add_alarm_bg   },
+    { "DASHBOARD", DASHBOARD_WIDTH,      DASHBOARD_HEIGHT,      dashboard       },  /* SCREEN_DASHBOARD    = 0 */
+    { "MENU",      MENU_WIDTH,           MENU_HEIGHT,           menu            },  /* SCREEN_MENU         = 1 */
+    { "ALARM",     ALARM_WIDTH,          ALARM_HEIGHT,          alarm_bg        },  /* SCREEN_ALARM        = 2 */
+    { "STOPWATCH", STOPWATCH_WIDTH,      STOPWATCH_HEIGHT,      stopwatch       },  /* SCREEN_STOPWATCH    = 3 */
+    { "POMODORO",  POMODORO_SETUP_WIDTH, POMODORO_SETUP_HEIGHT, pomodoro_setup  },  /* SCREEN_POMODORO     = 4 */
+    { "POMORUN",   POMODORO_RUN_WIDTH,   POMODORO_RUN_HEIGHT,   pomodoro_run_bg },  /* SCREEN_POMODORO_RUN = 5 */
+    { "TIMESET",   SETTIME_WIDTH,        SETTIME_HEIGHT,        settime         },  /* SCREEN_TIMESET      = 6 */
+    { "ADDALARM",  ADDALARM_WIDTH,       ADDALARM_HEIGHT,       add_alarm_bg    },  /* SCREEN_ADD_ALARM    = 7 */
 };
 
 static char s_cached_time[8]     = {0};
@@ -75,18 +78,19 @@ static char s_cached_date[32]    = {0};
 static char s_cached_weekday[16] = {0};
 
 static const char *s_source_names[DISPLAY_SRC_MAX] = {
-    [DISPLAY_SRC_SYSTEM]  = "SYSTEM",
-    [DISPLAY_SRC_WIFI]    = "WIFI",
-    [DISPLAY_SRC_SNTP]    = "SNTP",
-    [DISPLAY_SRC_TIME]    = "TIME",
-    [DISPLAY_SRC_DATE]    = "DATE",
-    [DISPLAY_SRC_WEEKDAY] = "WEEKDAY",
-    [DISPLAY_SRC_SCREEN]  = "SCREEN",
-	[DISPLAY_SRC_ALARM_EDIT] = "ALARM_EDIT",
-	[DISPLAY_SRC_ALARM_SAVE] = "ALARM_SAVE",
+    "SYSTEM",     /* DISPLAY_SRC_SYSTEM     = 0 */
+    "WIFI",       /* DISPLAY_SRC_WIFI       = 1 */
+    "SNTP",       /* DISPLAY_SRC_SNTP       = 2 */
+    "TIME",       /* DISPLAY_SRC_TIME       = 3 */
+    "DATE",       /* DISPLAY_SRC_DATE       = 4 */
+    "WEEKDAY",    /* DISPLAY_SRC_WEEKDAY    = 5 */
+    "SCREEN",     /* DISPLAY_SRC_SCREEN     = 6 */
+    "ALARM_EDIT", /* DISPLAY_SRC_ALARM_EDIT = 7 */
+    "ALARM_SAVE", /* DISPLAY_SRC_ALARM_SAVE = 8 */
+    "STOPWATCH",  /* DISPLAY_SRC_STOPWATCH  = 9 */
+    "POMODORO",   /* DISPLAY_SRC_POMODORO   = 10 */
+    "TIMESET",    /* DISPLAY_SRC_TIMESET    = 11 */
 };
-
-
 void display_send(display_source_t src, const char *fmt, ...)
 {
     if (s_display_queue == NULL) {
@@ -150,6 +154,14 @@ void display_send(display_source_t src, const char *fmt, ...)
      spr.deleteSprite();
  }
 
+ /* Set Time draft state — nạp từ giờ hệ thống khi vào màn, lưu lại khi bấm Save */
+ static int  s_st_hour12 = 7;
+ static int  s_st_minute = 0;
+ static bool s_st_is_pm  = false;
+ static int  s_st_day    = 1;
+ static int  s_st_month  = 1;
+ static int  s_st_year   = 2025;
+ 
  static const char s_day_letters[7] = {'M','T','W','T','F','S','S'};
  static int  s_draft_hour12 = 7;
  static int  s_draft_minute = 0;
@@ -376,6 +388,66 @@ void display_send(display_source_t src, const char *fmt, ...)
      ui_draw_stopwatch_reset_icon();
  }
 
+ static void ui_draw_st_field(int32_t x, int32_t y, int32_t w, int32_t h, const char *text)
+ {
+     LGFX_Sprite spr(&lcd);
+     spr.setColorDepth(16);
+     spr.setSwapBytes(true);
+     spr.createSprite(w, h);
+     for (int32_t row = 0; row < h; row++)
+         spr.pushImage(0, row, w, 1, &settime[(y + row) * SETTIME_WIDTH + x]);
+     spr.setFont(&fonts::Font0);
+     spr.setTextColor(TFT_CYAN);
+     spr.setTextDatum(MC_DATUM);
+     spr.drawString(text, w / 2, h / 2);
+     spr.pushSprite(x, y);
+     spr.deleteSprite();
+ }
+
+ static void ui_draw_settime_screen(void)
+ {
+     char buf[8];
+
+     /* Hour */
+     snprintf(buf, sizeof(buf), "%02d", s_st_hour12);
+     ui_draw_st_field(UI_ST_HOUR_VAL_X, UI_ST_HOUR_VAL_Y,
+                      UI_ST_HOUR_VAL_W, UI_ST_HOUR_VAL_H, buf);
+
+     /* Minute */
+     snprintf(buf, sizeof(buf), "%02d", s_st_minute);
+     ui_draw_st_field(UI_ST_MIN_VAL_X, UI_ST_MIN_VAL_Y,
+                      UI_ST_MIN_VAL_W, UI_ST_MIN_VAL_H, buf);
+
+     /* AM/PM */
+     ui_draw_st_field(UI_ST_AMPM_VAL_X, UI_ST_AMPM_VAL_Y,
+                      UI_ST_AMPM_VAL_W, UI_ST_AMPM_VAL_H,
+                      s_st_is_pm ? "PM" : "AM");
+
+     /* Day */
+     snprintf(buf, sizeof(buf), "%02d", s_st_day);
+     ui_draw_st_field(UI_ST_DAY_VAL_X, UI_ST_DAY_VAL_Y,
+                      UI_ST_DAY_VAL_W, UI_ST_DAY_VAL_H, buf);
+
+     /* Month */
+     snprintf(buf, sizeof(buf), "%02d", s_st_month);
+     ui_draw_st_field(UI_ST_MON_VAL_X, UI_ST_MON_VAL_Y,
+                      UI_ST_MON_VAL_W, UI_ST_MON_VAL_H, buf);
+
+     /* Year */
+     snprintf(buf, sizeof(buf), "%04d", s_st_year);
+     ui_draw_st_field(UI_ST_YEAR_VAL_X, UI_ST_YEAR_VAL_Y,
+                      UI_ST_YEAR_VAL_W, UI_ST_YEAR_VAL_H, buf);
+ }
+
+ /* Số ngày tối đa trong tháng (không cần leap-year chính xác tuyệt đối) */
+ static int st_days_in_month(int month, int year)
+ {
+     static const int days[] = {0,31,28,31,30,31,30,31,31,30,31,30,31};
+     if (month == 2 && ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0))
+         return 29;
+     return days[month];
+ }
+ 
  static const int32_t s_pset_row_y[POMO_FIELD_COUNT] = {
      UI_PSET_ROW0_Y, UI_PSET_ROW1_Y, UI_PSET_ROW2_Y, UI_PSET_ROW3_Y
  };
@@ -611,6 +683,20 @@ static void display_task(void *pvParameters)
 							else if (s_current_screen == SCREEN_POMODORO_RUN) {
 							    ui_draw_pomodoro_run_screen();
 							}
+							else if (s_current_screen == SCREEN_TIMESET) {
+							    /* Nạp giờ hệ thống hiện tại làm giá trị mặc định khi vào màn */
+							    time_t now_t; time(&now_t);
+							    struct tm ti; localtime_r(&now_t, &ti);
+							    int h12 = ti.tm_hour % 12;
+							    if (h12 == 0) h12 = 12;
+							    s_st_hour12 = h12;
+							    s_st_minute = ti.tm_min;
+							    s_st_is_pm  = (ti.tm_hour >= 12);
+							    s_st_day    = ti.tm_mday;
+							    s_st_month  = ti.tm_mon + 1;
+							    s_st_year   = ti.tm_year + 1900;
+							    ui_draw_settime_screen();
+							}
 							
 				            break;
 				        }
@@ -749,7 +835,60 @@ static void display_task(void *pvParameters)
 				        if (s_current_screen == SCREEN_POMODORO_RUN) ui_draw_pomodoro_run_toggle_btn();
 				    }
 				    break;
-						
+					
+				case DISPLAY_SRC_TIMESET:
+				    if (s_current_screen != SCREEN_TIMESET) break;
+
+				    if (strcmp(msg.text, "HOUR_UP") == 0) {
+				        s_st_hour12 = (s_st_hour12 % 12) + 1;
+				    } else if (strcmp(msg.text, "HOUR_DN") == 0) {
+				        s_st_hour12 = (s_st_hour12 == 1) ? 12 : s_st_hour12 - 1;
+				    } else if (strcmp(msg.text, "MIN_UP") == 0) {
+				        s_st_minute = (s_st_minute + 1) % 60;
+				    } else if (strcmp(msg.text, "MIN_DN") == 0) {
+				        s_st_minute = (s_st_minute == 0) ? 59 : s_st_minute - 1;
+				    } else if (strcmp(msg.text, "AMPM") == 0) {
+				        s_st_is_pm = !s_st_is_pm;
+				    } else if (strcmp(msg.text, "DAY_UP") == 0) {
+				        int max = st_days_in_month(s_st_month, s_st_year);
+				        s_st_day = (s_st_day % max) + 1;
+				    } else if (strcmp(msg.text, "DAY_DN") == 0) {
+				        int max = st_days_in_month(s_st_month, s_st_year);
+				        s_st_day = (s_st_day == 1) ? max : s_st_day - 1;
+				    } else if (strcmp(msg.text, "MON_UP") == 0) {
+				        s_st_month = (s_st_month % 12) + 1;
+				        /* clamp ngày nếu tháng mới ít ngày hơn */
+				        int max = st_days_in_month(s_st_month, s_st_year);
+				        if (s_st_day > max) s_st_day = max;
+				    } else if (strcmp(msg.text, "MON_DN") == 0) {
+				        s_st_month = (s_st_month == 1) ? 12 : s_st_month - 1;
+				        int max = st_days_in_month(s_st_month, s_st_year);
+				        if (s_st_day > max) s_st_day = max;
+				    } else if (strcmp(msg.text, "YEAR_UP") == 0) {
+				        if (s_st_year < 2099) s_st_year++;
+				    } else if (strcmp(msg.text, "YEAR_DN") == 0) {
+				        if (s_st_year > 2024) s_st_year--;
+				    } else if (strcmp(msg.text, "SAVE") == 0) {
+				        /* Áp giờ mới vào RTC hệ thống */
+				        struct tm ti = {};
+				        ti.tm_hour = s_st_is_pm ? ((s_st_hour12 % 12) + 12) : (s_st_hour12 % 12);
+				        ti.tm_min  = s_st_minute;
+				        ti.tm_sec  = 0;
+				        ti.tm_mday = s_st_day;
+				        ti.tm_mon  = s_st_month - 1;
+				        ti.tm_year = s_st_year - 1900;
+				        ti.tm_isdst = -1;
+				        time_t new_time = mktime(&ti);
+				        struct timeval tv = { .tv_sec = new_time, .tv_usec = 0 };
+				        settimeofday(&tv, NULL);
+				        ESP_LOGI(TAG_DISPLAY, "Time set: %04d-%02d-%02d %02d:%02d",
+				                 s_st_year, s_st_month, s_st_day, ti.tm_hour, s_st_minute);
+				        display_send(DISPLAY_SRC_SCREEN, "MENU");
+				        break;
+				    }
+				    ui_draw_settime_screen();
+				    break;
+							
 				case DISPLAY_SRC_WIFI:
 				case DISPLAY_SRC_SNTP:
 				case DISPLAY_SRC_SYSTEM:
@@ -895,8 +1034,35 @@ static void touch_task(void *pvParameters)
 					    break;
 
 					case SCREEN_TIMESET:
-					    if (IN_RECT(tx, ty, UI_BACK_BTN_X, UI_BACK_BTN_Y, UI_BACK_BTN_W, UI_BACK_BTN_H))
+					    if (IN_RECT(tx, ty, UI_BACK_BTN_X, UI_BACK_BTN_Y, UI_BACK_BTN_W, UI_BACK_BTN_H)) {
 					        display_send(DISPLAY_SRC_SCREEN, "MENU");
+					    } else if (IN_RECT(tx, ty, UI_ST_SAVE_X, UI_ST_SAVE_Y, UI_ST_SAVE_W, UI_ST_SAVE_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "SAVE");
+					    } else if (IN_RECT(tx, ty, UI_ST_HOUR_UP_X, UI_ST_HOUR_UP_Y, UI_ST_HOUR_UP_W, UI_ST_HOUR_UP_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "HOUR_UP");
+					    } else if (IN_RECT(tx, ty, UI_ST_HOUR_DN_X, UI_ST_HOUR_DN_Y, UI_ST_HOUR_DN_W, UI_ST_HOUR_DN_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "HOUR_DN");
+					    } else if (IN_RECT(tx, ty, UI_ST_MIN_UP_X, UI_ST_MIN_UP_Y, UI_ST_MIN_UP_W, UI_ST_MIN_UP_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "MIN_UP");
+					    } else if (IN_RECT(tx, ty, UI_ST_MIN_DN_X, UI_ST_MIN_DN_Y, UI_ST_MIN_DN_W, UI_ST_MIN_DN_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "MIN_DN");
+					    } else if (IN_RECT(tx, ty, UI_ST_AMPM_UP_X, UI_ST_AMPM_UP_Y, UI_ST_AMPM_UP_W, UI_ST_AMPM_UP_H) ||
+					               IN_RECT(tx, ty, UI_ST_AMPM_DN_X, UI_ST_AMPM_DN_Y, UI_ST_AMPM_DN_W, UI_ST_AMPM_DN_H)) {
+					        /* AM/PM toggle: chạm lên hoặc xuống đều đổi */
+					        display_send(DISPLAY_SRC_TIMESET, "AMPM");
+					    } else if (IN_RECT(tx, ty, UI_ST_DAY_UP_X, UI_ST_DAY_UP_Y, UI_ST_DAY_UP_W, UI_ST_DAY_UP_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "DAY_UP");
+					    } else if (IN_RECT(tx, ty, UI_ST_DAY_DN_X, UI_ST_DAY_DN_Y, UI_ST_DAY_DN_W, UI_ST_DAY_DN_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "DAY_DN");
+					    } else if (IN_RECT(tx, ty, UI_ST_MON_UP_X, UI_ST_MON_UP_Y, UI_ST_MON_UP_W, UI_ST_MON_UP_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "MON_UP");
+					    } else if (IN_RECT(tx, ty, UI_ST_MON_DN_X, UI_ST_MON_DN_Y, UI_ST_MON_DN_W, UI_ST_MON_DN_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "MON_DN");
+					    } else if (IN_RECT(tx, ty, UI_ST_YEAR_UP_X, UI_ST_YEAR_UP_Y, UI_ST_YEAR_UP_W, UI_ST_YEAR_UP_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "YEAR_UP");
+					    } else if (IN_RECT(tx, ty, UI_ST_YEAR_DN_X, UI_ST_YEAR_DN_Y, UI_ST_YEAR_DN_W, UI_ST_YEAR_DN_H)) {
+					        display_send(DISPLAY_SRC_TIMESET, "YEAR_DN");
+					    }
 					    break;
 
                     case SCREEN_ADD_ALARM:

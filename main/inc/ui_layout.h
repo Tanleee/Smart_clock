@@ -296,3 +296,104 @@
 
 #define UI_POMO_SKIP_ICON_W  19
 #define UI_POMO_SKIP_ICON_H  16
+
+/* ===== Set Time ===== */
+/* Hàng trên: Hour | Minute | AM-PM */
+#define UI_ST_HOUR_VAL_X      55
+#define UI_ST_HOUR_VAL_Y      77
+#define UI_ST_HOUR_VAL_W      65
+#define UI_ST_HOUR_VAL_H      22
+
+#define UI_ST_MIN_VAL_X      124
+#define UI_ST_MIN_VAL_Y       77
+#define UI_ST_MIN_VAL_W       68
+#define UI_ST_MIN_VAL_H       22
+
+#define UI_ST_AMPM_VAL_X     196
+#define UI_ST_AMPM_VAL_Y      77
+#define UI_ST_AMPM_VAL_W      69
+#define UI_ST_AMPM_VAL_H      22
+
+/* Hàng dưới: Day | Month | Year */
+#define UI_ST_DAY_VAL_X       48
+#define UI_ST_DAY_VAL_Y      160
+#define UI_ST_DAY_VAL_W       48
+#define UI_ST_DAY_VAL_H       18
+
+#define UI_ST_MON_VAL_X      105
+#define UI_ST_MON_VAL_Y      160
+#define UI_ST_MON_VAL_W       48
+#define UI_ST_MON_VAL_H       18
+
+#define UI_ST_YEAR_VAL_X     162
+#define UI_ST_YEAR_VAL_Y     160
+#define UI_ST_YEAR_VAL_W      48
+#define UI_ST_YEAR_VAL_H      18
+
+/* Vùng chạm Up/Down — mỗi cột chia 3 phần bằng nhau theo chiều dọc:
+   Up zone = phía trên box, Down zone = phía dưới box */
+/* Hour */
+#define UI_ST_HOUR_UP_X       55
+#define UI_ST_HOUR_UP_Y       52
+#define UI_ST_HOUR_UP_W       65
+#define UI_ST_HOUR_UP_H       24
+#define UI_ST_HOUR_DN_X       55
+#define UI_ST_HOUR_DN_Y      100
+#define UI_ST_HOUR_DN_W       65
+#define UI_ST_HOUR_DN_H       34
+
+/* Minute */
+#define UI_ST_MIN_UP_X       124
+#define UI_ST_MIN_UP_Y        52
+#define UI_ST_MIN_UP_W        68
+#define UI_ST_MIN_UP_H        24
+#define UI_ST_MIN_DN_X       124
+#define UI_ST_MIN_DN_Y       100
+#define UI_ST_MIN_DN_W        68
+#define UI_ST_MIN_DN_H        34
+
+/* AM-PM */
+#define UI_ST_AMPM_UP_X      196
+#define UI_ST_AMPM_UP_Y       52
+#define UI_ST_AMPM_UP_W       69
+#define UI_ST_AMPM_UP_H       24
+#define UI_ST_AMPM_DN_X      196
+#define UI_ST_AMPM_DN_Y      100
+#define UI_ST_AMPM_DN_W       69
+#define UI_ST_AMPM_DN_H       34
+
+/* Day */
+#define UI_ST_DAY_UP_X        48
+#define UI_ST_DAY_UP_Y       140
+#define UI_ST_DAY_UP_W        48
+#define UI_ST_DAY_UP_H        19
+#define UI_ST_DAY_DN_X        48
+#define UI_ST_DAY_DN_Y       179
+#define UI_ST_DAY_DN_W        48
+#define UI_ST_DAY_DN_H        28
+
+/* Month */
+#define UI_ST_MON_UP_X       105
+#define UI_ST_MON_UP_Y       140
+#define UI_ST_MON_UP_W        48
+#define UI_ST_MON_UP_H        19
+#define UI_ST_MON_DN_X       105
+#define UI_ST_MON_DN_Y       179
+#define UI_ST_MON_DN_W        48
+#define UI_ST_MON_DN_H        28
+
+/* Year */
+#define UI_ST_YEAR_UP_X      162
+#define UI_ST_YEAR_UP_Y      140
+#define UI_ST_YEAR_UP_W       48
+#define UI_ST_YEAR_UP_H       19
+#define UI_ST_YEAR_DN_X      162
+#define UI_ST_YEAR_DN_Y      179
+#define UI_ST_YEAR_DN_W       48
+#define UI_ST_YEAR_DN_H       28
+
+/* Nút Save */
+#define UI_ST_SAVE_X         244
+#define UI_ST_SAVE_Y         157
+#define UI_ST_SAVE_W          34
+#define UI_ST_SAVE_H          34
